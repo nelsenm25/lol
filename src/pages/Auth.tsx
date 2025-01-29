@@ -113,6 +113,18 @@ const Auth = () => {
         });
         setIsResetPassword(false);
       } else if (isSignUp) {
+        // Try to sign in with the email first
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: password + '_dummy', // Use a dummy password to avoid revealing if the password is correct
+        });
+
+        // If we get an invalid credentials error, the user exists
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
+          throw new Error("An account with this email already exists");
+        }
+
+        // If we get here, the user doesn't exist, so proceed with signup
         const { error } = await supabase.auth.signUp({
           email,
           password,
